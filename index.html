@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <!-- DÒNG QUAN TRỌNG NHẤT CHO ĐIỆN THOẠI -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <style>
+        /* Thiết lập chung */
+        * {
+            box-sizing: border-box; /* Giúp tính toán kích thước chuẩn xác hơn */
+        }
+
+        body {
+            margin: 0;
+            padding: 20px;
+            height: 100vh; /* Cao bằng 100% màn hình thiết bị */
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            
+            /* Căn giữa nội dung */
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+
+            /* Nền Gradient Hồng - Xanh */
+            background: linear-gradient(135deg, #ff9a9e 0%, #a18cd1 100%);
+            background-attachment: fixed; /* Giữ nền cố định khi cuộn */
+        }
+
+        h1 {
+            color: white;
+            text-align: center;
+            margin-bottom: 40px;
+            font-size: 2rem;
+            text-shadow: 1px 1px 10px rgba(0,0,0,0.2);
+        }
+
+        /* Khung chứa các nút */
+        .container {
+            display: flex;
+            gap: 20px; /* Khoảng cách giữa các nút */
+            width: 100%;
+            max-width: 600px; /* Không cho rộng quá trên máy tính */
+            justify-content: center;
+        }
+
+        /* Thiết kế nút bấm */
+        .btn {
+            text-decoration: none;
+            padding: 18px 30px;
+            font-size: 1.2rem; /* Chữ to dễ đọc trên đt */
+            font-weight: bold;
+            text-align: center;
+            border-radius: 50px;
+            
+            /* Màu nút cũng là Hồng Xanh (đảo ngược lại so với nền) */
+            background: white; 
+            color: #a18cd1;
+            
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            transition: transform 0.2s;
+            
+            /* Đảm bảo nút không bị co quá nhỏ */
+            flex: 1; 
+            white-space: nowrap;
+        }
+
+        /* Hiệu ứng khi bấm hoặc di chuột */
+        .btn:active {
+            transform: scale(0.95); /* Thu nhỏ nhẹ khi chạm vào */
+        }
+
+        /* --- PHẦN TỐI ƯU RIÊNG CHO ĐIỆN THOẠI --- */
+        @media (max-width: 600px) {
+            .container {
+                flex-direction: column; /* Xếp dọc nút trên màn hình nhỏ */
+                align-items: stretch; /* Kéo dãn nút cho bằng chiều ngang đt */
+            }
+
+            .btn {
+                display: block;
+                width: 100%; /* Nút rộng full màn hình */
+                margin-bottom: 15px; /* Khoảng cách khi xếp dọc */
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Chào Mừng</h1>
+
+    <div class="container">
+        <!-- Nút 1 -->
+        <a href="video.html" class="btn">Xem video</a>
+        
+        <!-- Nút 2 -->
+        <a href="sach.html" class="btn">Xem Sách</a>
+    </div>
+
+</body>
+</html>

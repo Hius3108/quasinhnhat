@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sổ Lưu Giữ Kỷ Niệm</title>
+    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@600&family=Quicksand:wght@400;600&family=Pacifico&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --accent-pink: #ff80ab;
+            --paper-color: #fffafb;
+            --speed: 0.8s;
+            --book-w: 500px;
+            --book-h: 700px;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: linear-gradient(135deg, #fbc2eb 0%, #a6c1ee 100%);
+            font-family: 'Quicksand', sans-serif;
+            overflow: hidden; /* Ngăn cuộn trang */
+        }
+
+        /* --- MÀN HÌNH YÊU CẦU XOAY NGANG (MỚI THÊM) --- */
+        #rotate-warning {
+            display: none; /* Mặc định ẩn */
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: #222;
+            z-index: 9999;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            text-align: center;
+        }
+
+        .phone-icon {
+            width: 60px;
+            height: 100px;
+            border: 3px solid white;
+            border-radius: 8px;
+            position: relative;
+            margin-bottom: 20px;
+            animation: rotatePhone 1.5s infinite ease-in-out;
+        }
+
+        .phone-icon::before {
+            content: '';
+            position: absolute;
+            top: 5px; left: 50%;
+            transform: translateX(-50%);
+            width: 20px; height: 3px;
+            background: white;
+            border-radius: 5px;
+        }
+
+        .warning-text {
+            font-family: 'Quicksand', sans-serif;
+            font-size: 1.2rem;
+            padding: 0 20px;
+            line-height: 1.5;
+        }
+
+        @keyframes rotatePhone {
+            0% { transform: rotate(0deg); }
+            25% { transform: rotate(0deg); }
+            75% { transform: rotate(-90deg); }
+            100% { transform: rotate(-90deg); }
+        }
+
+        /* Kích hoạt cảnh báo khi màn hình nhỏ và đang ở chế độ dọc */
+        @media only screen and (max-width: 850px) and (orientation: portrait) {
+            #rotate-warning {
+                display: flex;
+            }
+            .book-container {
+                display: none; /* Ẩn sách đi cho gọn */
+            }
+            .music-control {
+                display: none; /* Ẩn nút nhạc */
+            }
+        }
+
+        /* --- STYLE CHO NÚT NHẠC --- */
+        .music-control {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 1000;
+            background: rgba(255, 255, 255, 0.8);
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 24px;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+            border: 2px solid var(--accent-pink);
+            transition: transform 0.3s;
+            animation: spin 4s linear infinite;
+            animation-play-state: paused;
+        }
+
+        .music-control.playing {
+            animation-play-state: running;
+            background: var(--accent-pink);
+            color: white;
+        }
+
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+
+        /* --- FLIPBOOK CSS --- */
+        .book-container {
+            position: relative;
+            width: var(--book-w);
+            height: var(--book-h);
+            perspective: 3500px;
+            transition: transform 0.5s ease;
+        }
+
+        .book {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            transform-style: preserve-3d;
+            transition: transform var(--speed);
+        }
+
+        .page {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0; left: 0;
+            transform-origin: left;
+            transform-style: preserve-3d;
+            transition: transform var(--speed) cubic-bezier(0.645, 0.045, 0.355, 1);
+            cursor: pointer;
+            background-color: white;
+        }
+
+        .front, .back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            padding: 30px;
+            backface-visibility: hidden;
+            background: var(--paper-color);
+            border: 1px solid #f8bbd0;
+            box-shadow: inset 5px 0 30px rgba(0,0,0,0.05);
+            border-radius: 0 15px 15px 0;
+        }
+
+        .back { 
+            transform: rotateY(180deg); 
+            border-radius: 15px 0 0 15px;
+            background-image: radial-gradient(#ddd 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
+
+        .page.flipped { transform: rotateY(-180deg); }
+
+        /* GHI CHÚ */
+        .note-container {
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            border: 2px dashed var(--accent-pink);
+            padding: 20px;
+            border-radius: 15px;
+            background: rgba(255, 255, 255, 0.95);
+        }
+
+        .note-title {
+            font-family: 'Pacifico', cursive;
+            color: var(--accent-pink);
+            font-size: 2.2rem;
+            margin-bottom: 20px;
+            text-align: center;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+        }
+
+        .note-text {
+            font-family: 'Dancing Script', cursive;
+            font-size: 1.6rem;
+            line-height: 1.6;
+            color: #555;
+            text-align: justify;
+        }
+
+        /* --- CẤU HÌNH ẢNH POLAROID --- */
+        .pic {
+            position: absolute;
+            background: white;
+            padding: 8px 8px 25px 8px; 
+            box-shadow: 2px 3px 10px rgba(0,0,0,0.15);
+            width: 130px; 
+            transition: transform 0.3s, z-index 0s;
+            border: 1px solid #eee;
+        }
+        .pic img { width: 100%; height: 110px; object-fit: cover; }
+        
+        .pic.big { width: 220px; padding-bottom: 35px; }
+        .pic.big img { height: 180px; }
+
+        .pic:hover { 
+            transform: scale(1.15) rotate(0deg) !important;
+            z-index: 999 !important; 
+            box-shadow: 5px 10px 25px rgba(0,0,0,0.3);
+            cursor: zoom-in;
+            border: 1px solid var(--accent-pink);
+        }
+
+        /* STYLE BÌA */
+        .cover { 
+            background: var(--accent-pink) !important; 
+            background-image: none !important;
+            color: white; 
+            display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center;
+            border: 1px solid #ff4081;
+        }
+
+        /* STYLE TRANG ĐỆM */
+        .decoration-page {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            color: #ff80ab;
+        }
+
+        /* --- RESPONSIVE CHO MÀN HÌNH NGANG --- */
+        /* Chỉ scale sách khi màn hình đủ rộng (ngang) nhưng chiều cao thấp */
+        @media (max-width: 1100px) { .book-container { transform: scale(0.8); } }
+        /* Scale nhỏ hơn nữa cho điện thoại xoay ngang */
+        @media (max-height: 500px) and (orientation: landscape) { 
+            .book-container { transform: scale(0.5); } 
+            .pic { width: 100px; padding-bottom: 20px; } /* Thu nhỏ ảnh chút */
+            .pic img { height: 80px; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- KHỐI CẢNH BÁO XOAY MÀN HÌNH -->
+<div id="rotate-warning">
+    <div class="phone-icon"></div>
+    <p class="warning-text">Vui lòng xoay ngang điện thoại<br>để mở cuốn sổ kỷ niệm này nhé! ❤️</p>
+</div>
+
+<!-- FILE NHẠC (Đảm bảo file music.mp3 nằm cùng thư mục) -->
+<audio id="bg-music" loop>
+    <source src="music.mp3" type="audio/mpeg">
+</audio>
+
+<!-- NÚT ĐIỀU KHIỂN NHẠC -->
+<div class="music-control" id="musicBtn" onclick="toggleMusic()" title="Bật/Tắt nhạc">
+    🎵
+</div>
+
+<div class="book-container">
+    <div class="book" id="book">
+        
+        <!-- TRANG 1: BÌA ĐẦU -->
+        <div class="page">
+            <div class="front cover">
+                <h1 style="font-family: 'Pacifico'; font-size: 3.5rem; text-shadow: 2px 2px 4px rgba(0,0,0,0.2);">Sổ lưu giữ</h1>
+                <p style="font-size: 1.2rem;">Một chặng đường - Một người dẫn lối</p>
+                <p style="margin-top:20px; font-size: 0.9rem; border: 1px solid white; padding: 5px 15px; border-radius: 20px;">Click để mở</p>
+            </div>
+            <div class="back">
+                <div class="note-container">
+                    <h2 class="note-title">Lời Mở Đầu</h2>
+                    <p class="note-text">
+                        Nhanh thật, chưa gì đã trôi qua hơn 3 tháng...<br><br>
+                        Cuốn sách này chứa đựng những sự kiện đáng nhớ nhất!
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- TRANG 2: TRANG ĐỆM -->
+        <div class="page">
+            <div class="front decoration-page">
+                <h2 style="font-family: 'Dancing Script'; font-size: 3.5rem;">~ Chapter 1 ~</h2>
+                <p style="font-family: 'Quicksand'; margin-top: 20px; font-size: 1.2rem;">Hành trình bắt đầu...</p>
+                <div style="font-size: 4rem; margin-top: 30px;">✨</div>
+            </div>
+            <div class="back decoration-page">
+                <h2 style="font-family: 'Pacifico'; font-size: 2.5rem; color: #777;">Khoảnh khắc</h2>
+                <p style="font-family: 'Dancing Script'; font-size: 1.8rem; color: var(--accent-pink);">Của những điều đáng nhớ</p>
+            </div>
+        </div>
+
+       <!-- TRANG 3: SỰ KIỆN 1 -->
+        <div class="page">
+            <div class="front">
+                <!-- Hàng 1 -->
+                <div class="pic" style="top:20px; left:20px; transform:rotate(-15deg);"><img src="img/lop3.jpg" alt="Ảnh 1"></div>
+                <div class="pic" style="top:30px; left:180px; transform:rotate(5deg);"><img src="img/ao2.jpg" alt="Ảnh 2"></div>
+                <div class="pic" style="top:20px; left:340px; transform:rotate(-10deg);"><img src="img/tthu3.jpg" alt="Ảnh 3"></div>
+                
+                <!-- Hàng 2 -->
+                <div class="pic" style="top:230px; left:40px; transform:rotate(10deg);"><img src="img/201.jpg" alt="Ảnh 4"></div>
+                <div class="pic" style="top:210px; left:200px; transform:rotate(-5deg); z-index: 5;"><img src="img/204.jpg" alt="Ảnh 5"></div>
+                <div class="pic" style="top:230px; left:350px; transform:rotate(8deg);"><img src="img/vn5.jpg" alt="Ảnh 6"></div>
+                
+                <!-- Hàng 3 -->
+                <div class="pic" style="top:440px; left:30px; transform:rotate(-12deg);"><img src="img/dbanh1.jpg" alt="Ảnh 7"></div>
+                <div class="pic" style="top:460px; left:190px; transform:rotate(5deg);"><img src="img/hc1.jpg" alt="Ảnh 8"></div>
+                <div class="pic" style="top:440px; left:340px; transform:rotate(15deg);"><img src="img/dc8.jpg" alt="Ảnh 9"></div>
+            </div>
+            <div class="back">
+                <div class="note-container">
+                    <h2 class="note-title">Nhận Lớp & Áo Mới</h2>
+                    <p class="note-text">Ngày đầu tiên nhìn ai cũng hiền lành, ngây thơ. Ai ngờ sau này toàn là "báo". Áo mới ai cũng khen đẹp!</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- TRANG 4: ẢNH LỚP - NOTE TRUNG THU -->
+        <div class="page">
+            <div class="front">
+                <div class="pic" style="top:30px; left:30px; transform:rotate(10deg);"><img src="img/lop1jpg.jpg" alt="Ảnh"></div>
+                <div class="pic" style="top:50px; left:280px; transform:rotate(-5deg);"><img src="img/lop2.jpg" alt="Ảnh"></div>
+                <div class="pic" style="top:220px; left:150px; transform:rotate(2deg); z-index:10;"><img src="img/lop3.jpg" alt="Ảnh"></div>
+                <div class="pic" style="top:350px; left:20px; transform:rotate(-15deg);"><img src="img/ao1.jpg" alt="Ảnh"></div>
+                <div class="pic" style="top:360px; left:300px; transform:rotate(12deg);"><img src="img/ao2.jpg" alt="Ảnh"></div>
+                <div class="pic" style="top:500px; left:140px; transform:rotate(-3deg);"><img src="img/ao3.jpg" alt="Ảnh"></div>
+            </div>
+            <div class="back">
+                <div class="note-container">
+                    <h2 class="note-title">Trung Thu</h2>
+                    <p class="note-text">Làm đơn giản nhưng mà vẫn "nhất".</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- TRANG 5: ẢNH TRUNG THU -->
+        <div class="page">
+            <div class="front">
+                <div class="pic big" style="top:40px; left:40px; transform:rotate(-12deg);"><img src="img/tthu1.jpg" alt="Trung thu 1"></div>
+                <div class="pic big" style="top:250px; left:260px; transform:rotate(8deg);"><img src="img/tthu2.jpg" alt="Trung thu 2"></div>
+                <div class="pic big" style="top:480px; left:60px; transform:rotate(-5deg);"><img src="img/tthu3.jpg" alt="Trung thu 3"></div>
+            </div>
+            <div class="back">
+                <div class="note-container">
+                    <h2 class="note-title">20/10 & 19/11 & 20/11</h2>
+                    <p class="note-text">Hai ngày lễ mà không đứa nào trong lớp ngờ tới. Tập nhảy sai lên sai xuống, thế mà lúc lên sân khấu lại đều tăm tắp (thi thoảng có lúc vấp).</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- TRANG 6: ẢNH GỘP -->
+         <div class="page">
+            <div class="front">
+                <div class="pic" style="top:20px; left:40px; transform:rotate(-10deg);"><img src="img/201.jpg" alt="Ảnh"></div>
+                <div class="pic" style="top:40px; left:260px; transform:rotate(8deg);"><img src="img/202.jpg" alt="Ảnh"></div>
+                <div class="pic" style="top:200px; left:150px; transform:rotate(-3deg);"><img src="img/203.jpg" alt="Ảnh"></div>
+                <div class="pic" style="top:350px; left:20px; transform:rotate(12deg);"><img src="img/vn1.jpg" alt="Ảnh"></div>
+                <div class="pic" style="top:380px; left:280px; transform:rotate(-15deg);"><img src="img/204.jpg" alt="Ảnh"></div>
+                <div class="pic" style="top:520px; left:140px; transform:rotate(5deg);"><img src="img/vn3.jpg" alt="Ảnh"></div>
+            </div>
+            <div class="back">
+                <div class="note-container">
+                    <h2 class="note-title">Bóng Đá</h2>
+                    <p class="note-text">Đội cổ vũ còn sung hơn cả cầu thủ!</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- TRANG 7: ẢNH BÓNG ĐÁ -->
+        <div class="page">
+            <div class="front">
+                <div class="pic big" style="top:40px; left:30px; transform:rotate(10deg);"><img src="img/dbanh1.jpg" alt="Bóng đá"></div>
+                <div class="pic big" style="top:260px; left:250px; transform:rotate(-8deg);"><img src="img/dbanh2.jpg" alt="Bóng đá"></div>
+                <div class="pic big" style="top:500px; left:50px; transform:rotate(5deg);"><img src="img/dbanh3.jpg" alt="Bóng đá"></div>
+            </div>
+            <div class="back">
+                <div class="note-container">
+                    <h2 class="note-title">Huy Chương</h2>
+                    <p class="note-text">Thời gian mà cả lớp "sĩ" nhất.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- TRANG 8: ẢNH HUY CHƯƠNG -->
+        <div class="page">
+            <div class="front">
+                <div class="pic big" style="top:40px; left:30px; transform:rotate(-10deg);"><img src="img/hc1.jpg" alt="Huy chương"></div>
+                <div class="pic big" style="top:260px; left:250px; transform:rotate(5deg);"><img src="img/hc2.jpg" alt="Huy chương"></div>
+                <div class="pic big" style="top:480px; left:60px; transform:rotate(-5deg);"><img src="img/hc3.jpg" alt="Huy chương"></div>
+            </div>
+            <div class="back">
+                <div class="note-container">
+                    <h2 class="note-title">Đi Chơiiiiiiii</h2>
+                    <p class="note-text">Đi ai cũng nôn nao mà lên xe lại ngủ hết.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- TRANG 9: KẾT THÚC -->
+        <div class="page">
+            <div class="front">
+                <div class="pic" style="top:20px; left:20px; transform:rotate(-15deg);"><img src="img/dc1.jpg" alt="Ảnh"></div>
+                <div class="pic" style="top:10px; left:180px; transform:rotate(5deg);"><img src="img/dc2.jpg" alt="Ảnh"></div>
+                <div class="pic" style="top:30px; left:330px; transform:rotate(-5deg);"><img src="img/dc3.jpg" alt="Ảnh"></div>
+                <div class="pic" style="top:200px; left:40px; transform:rotate(10deg);"><img src="img/dc4.jpg" alt="Ảnh"></div>
+                <div class="pic" style="top:220px; left:200px; transform:rotate(-8deg); z-index: 5;"><img src="img/dc5.jpg" alt="Ảnh"></div>
+                <div class="pic" style="top:190px; left:340px; transform:rotate(12deg);"><img src="img/dc6.jpg" alt="Ảnh"></div>
+                <div class="pic" style="top:400px; left:100px; transform:rotate(-5deg);"><img src="img/dc7.jpg" alt="Ảnh"></div>
+            </div>
+
+            <div class="back cover">
+                <h1 style="font-family: 'Pacifico'; font-size: 3.5rem;">The End</h1>
+                <p style="padding: 0 20px;">Dừng lại không phải kết thúc, nó chỉ mở ra một hành trình mới.</p>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<script>
+    // --- XỬ LÝ NHẠC ---
+    const music = document.getElementById('bg-music');
+    const musicBtn = document.getElementById('musicBtn');
+    let isPlaying = false;
+
+    // Hàm bật/tắt nhạc khi bấm nút
+    function toggleMusic() {
+        if (isPlaying) {
+            music.pause();
+            musicBtn.classList.remove('playing');
+        } else {
+            music.play();
+            musicBtn.classList.add('playing');
+        }
+        isPlaying = !isPlaying;
+    }
+
+    // Tự động phát nhạc khi người dùng click lần đầu vào bất cứ đâu
+    window.addEventListener('click', () => {
+        if (!isPlaying) {
+            music.play().then(() => {
+                isPlaying = true;
+                musicBtn.classList.add('playing');
+            }).catch(error => {
+                console.log("Trình duyệt chặn autoplay, chờ người dùng tương tác thêm.");
+            });
+        }
+    }, { once: true });
+
+    // --- XỬ LÝ SÁCH LẬT ---
+    const book = document.querySelector("#book");
+    const pages = document.querySelectorAll(".page");
+    const totalPages = pages.length;
+
+    // Thiết lập z-index ban đầu
+    pages.forEach((page, index) => {
+        page.style.zIndex = totalPages - index;
+    });
+
+    pages.forEach((page, index) => {
+        page.addEventListener("click", () => {
+            if (!page.classList.contains("flipped")) {
+                // LẬT TRANG ĐI (MỞ)
+                page.classList.add("flipped");
+                page.style.zIndex = index + 1; 
+
+                // Hiệu ứng dịch chuyển sách
+                if (index === 0) book.style.transform = "translateX(50%)";
+                if (index === totalPages - 1) book.style.transform = "translateX(100%)";
+            } else {
+                // LẬT TRANG LẠI (ĐÓNG)
+                page.classList.remove("flipped");
+                
+                setTimeout(() => {
+                    page.style.zIndex = totalPages - index;
+                }, 300);
+
+                if (index === 0) book.style.transform = "translateX(0%)";
+                if (index === totalPages - 1) book.style.transform = "translateX(50%)";
+            }
+        });
+    });
+</script>
+
+</body>
+</html>
