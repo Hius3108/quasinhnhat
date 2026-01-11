@@ -2,7 +2,6 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <!-- Viewport chuẩn cho mobile, chống zoom lung tung -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Sổ Lưu Giữ Kỷ Niệm</title>
     <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@600&family=Quicksand:wght@400;600&family=Pacifico&display=swap" rel="stylesheet">
@@ -10,27 +9,26 @@
         :root {
             --accent-pink: #ff80ab;
             --paper-color: #fffafb;
-            --speed: 0.8s; /* Tốc độ lật */
+            --speed: 0.8s;
             --book-w: 500px;
             --book-h: 700px;
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
-        html, body { width: 100%; height: 100%; overflow: hidden; }
-
-        body {
-            display: flex; justify-content: center; align-items: center;
+        html, body {
+            width: 100%; height: 100%;
+            overflow: hidden;
             background: linear-gradient(135deg, #fbc2eb 0%, #a6c1ee 100%);
             font-family: 'Quicksand', sans-serif;
-            touch-action: none; /* Tối ưu chạm trên mobile */
         }
 
-        /* --- MÀN HÌNH CẢNH BÁO XOAY --- */
+        /* --- MÀN HÌNH CẢNH BÁO (QUAN TRỌNG) --- */
         #rotate-warning {
-            display: none; position: fixed;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background: #222; z-index: 9999;
+            display: none; /* JS sẽ bật cái này lên */
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: #222; 
+            z-index: 9999;
             flex-direction: column; justify-content: center; align-items: center;
             color: white; text-align: center;
         }
@@ -50,49 +48,31 @@
             80%, 100% { transform: rotate(-90deg); }
         }
 
-        /* Chỉ hiện cảnh báo khi điện thoại đang DỌC */
-        @media only screen and (orientation: portrait) {
-            #rotate-warning { display: flex; }
-            .book-container, .music-control { display: none !important; }
+        /* --- CONTAINER CHÍNH --- */
+        .main-content {
+            position: fixed;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%); /* Căn giữa */
+            width: var(--book-w);
+            height: var(--book-h);
+            transition: opacity 0.3s, transform 0.3s; /* Hiệu ứng mượt */
         }
 
-        /* --- NÚT NHẠC --- */
-        .music-control {
-            position: fixed; bottom: 20px; right: 20px; z-index: 2000;
-            background: rgba(255, 255, 255, 0.9);
-            width: 45px; height: 45px; border-radius: 50%;
-            display: flex; justify-content: center; align-items: center;
-            font-size: 20px; cursor: pointer;
-            border: 2px solid var(--accent-pink);
-            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+        /* Khi màn hình dọc, ẩn nội dung chính đi */
+        .portrait-mode .main-content {
+            opacity: 0;
+            pointer-events: none;
         }
-        .music-control.playing { animation: spin 4s linear infinite; background: var(--accent-pink); color: white; }
-        @keyframes spin { 100% { transform: rotate(360deg); } }
+        /* Khi màn hình dọc, hiện cảnh báo */
+        .portrait-mode #rotate-warning {
+            display: flex !important;
+        }
 
-        /* --- BOOK CONTAINER --- */
+        /* --- SÁCH --- */
         .book-container {
-            position: relative;
-            width: var(--book-w); height: var(--book-h);
+            position: relative; width: 100%; height: 100%;
             perspective: 3000px;
-            transform-origin: center center;
-            transition: transform 0.5s ease;
         }
-
-        /* --- SCALE TỰ ĐỘNG CHO MỌI THIẾT BỊ --- */
-        @media (max-width: 1200px) { .book-container { transform: scale(0.85); } }
-        @media (max-width: 900px) { .book-container { transform: scale(0.7); } }
-
-        /* MOBILE XOAY NGANG (QUAN TRỌNG NHẤT) */
-        @media only screen and (max-height: 600px) and (orientation: landscape) {
-            .book-container { transform: scale(0.42); } /* Thu nhỏ còn 42% */
-            .page { cursor: default; }
-        }
-        /* Mobile màn hình cực bé (iPhone SE/5/6 cũ) */
-        @media only screen and (max-height: 400px) and (orientation: landscape) {
-            .book-container { transform: scale(0.35); }
-        }
-
-        /* --- CẤU TRÚC TRANG SÁCH --- */
         .book {
             position: relative; width: 100%; height: 100%;
             transform-style: preserve-3d;
@@ -104,7 +84,7 @@
             transform-style: preserve-3d;
             transition: transform var(--speed) cubic-bezier(0.645, 0.045, 0.355, 1);
             background-color: white;
-            user-select: none; /* Chống bôi đen chữ khi bấm */
+            user-select: none;
         }
         .front, .back {
             position: absolute; width: 100%; height: 100%; padding: 15px;
@@ -118,227 +98,263 @@
         }
         .page.flipped { transform: rotateY(-180deg); }
 
-        /* --- STYLE NỘI DUNG --- */
+        /* --- NỘI DUNG BÊN TRONG --- */
         .note-container {
             height: 100%; display: flex; flex-direction: column; justify-content: center;
-            border: 2px dashed var(--accent-pink); padding: 15px;
+            border: 2px dashed var(--accent-pink); padding: 10px;
             border-radius: 10px; background: rgba(255,255,255,0.95);
         }
-        .note-title {
-            font-family: 'Pacifico'; color: var(--accent-pink); font-size: 2rem;
-            text-align: center; margin-bottom: 15px;
+        .note-title { font-family: 'Pacifico'; color: var(--accent-pink); font-size: 1.8rem; text-align: center; margin-bottom: 10px; }
+        .note-text { font-family: 'Dancing Script'; font-size: 1.4rem; color: #444; text-align: justify; line-height: 1.3; }
+
+        .pic {
+            position: absolute; background: #fff; padding: 5px 5px 20px 5px;
+            box-shadow: 1px 2px 6px rgba(0,0,0,0.2); width: 120px; border: 1px solid #eee;
         }
-        .note-text {
-            font-family: 'Dancing Script'; font-size: 1.5rem; color: #444; text-align: justify; line-height: 1.4;
-        }
+        .pic img { width: 100%; height: 100px; object-fit: cover; display: block; }
+        .pic.big { width: 200px; padding-bottom: 30px; }
+        .pic.big img { height: 160px; }
+        
         .cover { background: var(--accent-pink); color: white; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
         .deco { display: flex; flex-direction: column; align-items: center; justify-content: center; color: #ff80ab; text-align: center; }
 
-        /* --- ẢNH POLAROID --- */
-        .pic {
-            position: absolute; background: #fff;
-            padding: 5px 5px 25px 5px;
-            box-shadow: 1px 2px 8px rgba(0,0,0,0.2);
-            width: 130px; border: 1px solid #eee;
-            transition: transform 0.3s;
+        /* Nút nhạc */
+        .music-control {
+            position: fixed; bottom: 20px; right: 20px; z-index: 2000;
+            background: rgba(255, 255, 255, 0.9); width: 45px; height: 45px; border-radius: 50%;
+            display: flex; justify-content: center; align-items: center; font-size: 20px;
+            cursor: pointer; border: 2px solid var(--accent-pink);
         }
-        .pic img { width: 100%; height: 110px; object-fit: cover; display: block; }
-        .pic.big { width: 220px; padding-bottom: 30px; }
-        .pic.big img { height: 180px; }
-
-        /* Hiệu ứng hover chỉ chạy trên máy tính */
-        @media (hover: hover) {
-            .pic:hover { transform: scale(1.1) rotate(0deg) !important; z-index: 999 !important; border-color: var(--accent-pink); }
-        }
+        .music-control.playing { animation: spin 4s linear infinite; background: var(--accent-pink); color: white; }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
     </style>
 </head>
 <body>
 
-    <!-- CẢNH BÁO MÀN HÌNH DỌC -->
+    <!-- MÀN HÌNH ĐEN CẢNH BÁO -->
     <div id="rotate-warning">
         <div class="phone-icon"></div>
-        <p style="font-size: 1.2rem; padding: 0 20px;">Vui lòng xoay ngang điện thoại<br>để mở sổ kỷ niệm nhé! ❤️</p>
+        <p style="font-size: 1.2rem; padding: 0 20px;">Vui lòng xoay ngang điện thoại<br>để xem sổ kỷ niệm nhé! ❤️</p>
     </div>
 
-    <!-- AUDIO -->
     <div class="music-control" id="musicBtn" onclick="toggleMusic()">🎵</div>
     <audio id="bg-music" loop><source src="music.mp3" type="audio/mpeg"></audio>
 
-    <!-- SÁCH 10 TRANG -->
-    <div class="book-container">
-        <div class="book" id="book">
-            
-            <!-- TRANG 1: BÌA -->
-            <div class="page">
-                <div class="front cover">
-                    <h1 style="font-family:'Pacifico'; font-size:3.5rem;">Sổ Lưu Giữ</h1>
-                    <p style="font-size:1.2rem;">Một chặng đường - Một người dẫn lối</p>
-                    <p style="margin-top:20px; border:1px solid white; padding:5px 15px; border-radius:20px; font-size:0.9rem;">Chạm để mở</p>
-                </div>
-                <div class="back">
-                    <div class="note-container">
-                        <h2 class="note-title">Lời Mở Đầu</h2>
-                        <p class="note-text">Nhanh thật, chưa gì đã trôi qua hơn 3 tháng...<br><br>Cuốn sách này chứa đựng những sự kiện đáng nhớ nhất!</p>
+    <!-- WRAPPER CHÍNH -->
+    <div class="main-content" id="mainContent">
+        <div class="book-container">
+            <div class="book" id="book">
+                
+                <!-- TRANG 1: BÌA -->
+                <div class="page">
+                    <div class="front cover">
+                        <h1 style="font-family:'Pacifico'; font-size:3.5rem;">Sổ Lưu Giữ</h1>
+                        <p style="font-size:1.2rem;">Một chặng đường đáng nhớ</p>
+                        <p style="margin-top:20px; border:1px solid white; padding:5px 15px; border-radius:20px; font-size:0.9rem;">Chạm để mở</p>
+                    </div>
+                    <div class="back">
+                        <div class="note-container">
+                            <h2 class="note-title">Lời Mở Đầu</h2>
+                            <p class="note-text">Nhanh thật, chưa gì đã trôi qua hơn 3 tháng...<br><br>Cuốn sách này chứa đựng những sự kiện tuyệt vời nhất!</p>
+                        </div>
                     </div>
                 </div>
-            </div>
 
-            <!-- TRANG 2: CHAPTER 1 -->
-            <div class="page">
-                <div class="front deco">
-                    <h2 style="font-family:'Dancing Script'; font-size:3.5rem;">~ Chapter 1 ~</h2>
-                    <p style="margin-top:20px; font-size:1.2rem;">Hành trình bắt đầu...</p>
-                    <div style="font-size:4rem; margin-top:30px;">✨</div>
-                </div>
-                <div class="back deco">
-                    <h2 style="font-family:'Pacifico'; font-size:2.5rem; color:#777;">Khoảnh khắc</h2>
-                    <p style="font-family:'Dancing Script'; font-size:1.8rem;">Của những điều đáng nhớ</p>
-                </div>
-            </div>
-
-            <!-- TRANG 3: SỰ KIỆN 1 -->
-            <div class="page">
-                <div class="front">
-                    <!-- onerror giúp hiện khung xám nếu ảnh lỗi -->
-                    <div class="pic" style="top:20px; left:20px; transform:rotate(-15deg);"><img src="img/lop3.jpg" onerror="this.src='https://placehold.co/100x110?text=Anh1'" alt="1"></div>
-                    <div class="pic" style="top:30px; left:180px; transform:rotate(5deg);"><img src="img/ao2.jpg" onerror="this.src='https://placehold.co/100x110?text=Anh2'" alt="2"></div>
-                    <div class="pic" style="top:20px; left:340px; transform:rotate(-10deg);"><img src="img/tthu3.jpg" onerror="this.src='https://placehold.co/100x110?text=Anh3'" alt="3"></div>
-                    <div class="pic" style="top:230px; left:40px; transform:rotate(10deg);"><img src="img/201.jpg" onerror="this.src='https://placehold.co/100x110?text=Anh4'" alt="4"></div>
-                    <div class="pic" style="top:210px; left:200px; transform:rotate(-5deg); z-index:5;"><img src="img/204.jpg" onerror="this.src='https://placehold.co/100x110?text=Anh5'" alt="5"></div>
-                    <div class="pic" style="top:230px; left:350px; transform:rotate(8deg);"><img src="img/vn5.jpg" onerror="this.src='https://placehold.co/100x110?text=Anh6'" alt="6"></div>
-                    <div class="pic" style="top:440px; left:30px; transform:rotate(-12deg);"><img src="img/dbanh1.jpg" onerror="this.src='https://placehold.co/100x110?text=Anh7'" alt="7"></div>
-                    <div class="pic" style="top:460px; left:190px; transform:rotate(5deg);"><img src="img/hc1.jpg" onerror="this.src='https://placehold.co/100x110?text=Anh8'" alt="8"></div>
-                    <div class="pic" style="top:440px; left:340px; transform:rotate(15deg);"><img src="img/dc8.jpg" onerror="this.src='https://placehold.co/100x110?text=Anh9'" alt="9"></div>
-                </div>
-                <div class="back">
-                    <div class="note-container">
-                        <h2 class="note-title">Nhận Lớp</h2>
-                        <p class="note-text">Ngày đầu tiên nhìn ai cũng hiền lành, ngây thơ. Ai ngờ sau này toàn là "báo". Áo mới ai cũng khen đẹp!</p>
+                <!-- TRANG 2: CHAPTER 1 -->
+                <div class="page">
+                    <div class="front deco">
+                        <h2 style="font-family:'Dancing Script'; font-size:3.5rem;">~ Chapter 1 ~</h2>
+                        <p style="margin-top:20px;">Hành trình bắt đầu...</p>
+                        <div style="font-size:4rem; margin-top:20px;">✨</div>
+                    </div>
+                    <div class="back deco">
+                        <h2 style="font-family:'Pacifico'; font-size:2.5rem; color:#777;">Khoảnh khắc</h2>
                     </div>
                 </div>
-            </div>
 
-            <!-- TRANG 4: ẢNH LỚP & NOTE TRUNG THU -->
-            <div class="page">
-                <div class="front">
-                    <div class="pic" style="top:30px; left:30px; transform:rotate(10deg);"><img src="img/lop1jpg.jpg" onerror="this.src='https://placehold.co/100x110?text=Lop1'" alt="img"></div>
-                    <div class="pic" style="top:50px; left:280px; transform:rotate(-5deg);"><img src="img/lop2.jpg" onerror="this.src='https://placehold.co/100x110?text=Lop2'" alt="img"></div>
-                    <div class="pic" style="top:220px; left:150px; transform:rotate(2deg); z-index:10;"><img src="img/lop3.jpg" onerror="this.src='https://placehold.co/100x110?text=Lop3'" alt="img"></div>
-                    <div class="pic" style="top:350px; left:20px; transform:rotate(-15deg);"><img src="img/ao1.jpg" onerror="this.src='https://placehold.co/100x110?text=Ao1'" alt="img"></div>
-                    <div class="pic" style="top:360px; left:300px; transform:rotate(12deg);"><img src="img/ao2.jpg" onerror="this.src='https://placehold.co/100x110?text=Ao2'" alt="img"></div>
-                    <div class="pic" style="top:500px; left:140px; transform:rotate(-3deg);"><img src="img/ao3.jpg" onerror="this.src='https://placehold.co/100x110?text=Ao3'" alt="img"></div>
-                </div>
-                <div class="back">
-                    <div class="note-container">
-                        <h2 class="note-title">Trung Thu</h2>
-                        <p class="note-text">Làm đơn giản nhưng mà vẫn "nhất". Vui là chính!</p>
+                <!-- TRANG 3: NHẬN LỚP -->
+                <div class="page">
+                    <div class="front">
+                        <div class="pic" style="top:20px; left:20px; transform:rotate(-15deg);"><img src="img/lop3.jpg" onerror="this.src='https://placehold.co/100x110?text=Anh1'" alt="1"></div>
+                        <div class="pic" style="top:30px; left:180px; transform:rotate(5deg);"><img src="img/ao2.jpg" onerror="this.src='https://placehold.co/100x110?text=Anh2'" alt="2"></div>
+                        <div class="pic" style="top:20px; left:340px; transform:rotate(-10deg);"><img src="img/tthu3.jpg" onerror="this.src='https://placehold.co/100x110?text=Anh3'" alt="3"></div>
+                        <div class="pic" style="top:230px; left:40px; transform:rotate(10deg);"><img src="img/201.jpg" onerror="this.src='https://placehold.co/100x110?text=Anh4'" alt="4"></div>
+                        <div class="pic" style="top:210px; left:200px; transform:rotate(-5deg); z-index:5;"><img src="img/204.jpg" onerror="this.src='https://placehold.co/100x110?text=Anh5'" alt="5"></div>
+                        <div class="pic" style="top:230px; left:350px; transform:rotate(8deg);"><img src="img/vn5.jpg" onerror="this.src='https://placehold.co/100x110?text=Anh6'" alt="6"></div>
+                        <div class="pic" style="top:440px; left:30px; transform:rotate(-12deg);"><img src="img/dbanh1.jpg" onerror="this.src='https://placehold.co/100x110?text=Anh7'" alt="7"></div>
+                        <div class="pic" style="top:460px; left:190px; transform:rotate(5deg);"><img src="img/hc1.jpg" onerror="this.src='https://placehold.co/100x110?text=Anh8'" alt="8"></div>
+                        <div class="pic" style="top:440px; left:340px; transform:rotate(15deg);"><img src="img/dc8.jpg" onerror="this.src='https://placehold.co/100x110?text=Anh9'" alt="9"></div>
+                    </div>
+                    <div class="back">
+                        <div class="note-container">
+                            <h2 class="note-title">Nhận Lớp</h2>
+                            <p class="note-text">Ngày đầu tiên nhìn ai cũng hiền lành. Ai ngờ sau này toàn là "báo". Áo mới ai cũng khen đẹp!</p>
+                        </div>
                     </div>
                 </div>
-            </div>
 
-            <!-- TRANG 5: ẢNH TRUNG THU TO -->
-            <div class="page">
-                <div class="front">
-                    <div class="pic big" style="top:40px; left:40px; transform:rotate(-12deg);"><img src="img/tthu1.jpg" onerror="this.src='https://placehold.co/200x160?text=TrungThu1'" alt="img"></div>
-                    <div class="pic big" style="top:250px; left:260px; transform:rotate(8deg);"><img src="img/tthu2.jpg" onerror="this.src='https://placehold.co/200x160?text=TrungThu2'" alt="img"></div>
-                    <div class="pic big" style="top:480px; left:60px; transform:rotate(-5deg);"><img src="img/tthu3.jpg" onerror="this.src='https://placehold.co/200x160?text=TrungThu3'" alt="img"></div>
-                </div>
-                <div class="back">
-                    <div class="note-container">
-                        <h2 class="note-title">20/10 & 20/11</h2>
-                        <p class="note-text">Hai ngày lễ mà không đứa nào ngờ tới. Tập nhảy sai lên sai xuống, thế mà lúc lên sân khấu lại đều tăm tắp.</p>
+                <!-- TRANG 4: LỚP & TRUNG THU -->
+                <div class="page">
+                    <div class="front">
+                        <div class="pic" style="top:30px; left:30px; transform:rotate(10deg);"><img src="img/lop1jpg.jpg" onerror="this.src='https://placehold.co/100x110?text=Anh10'" alt="i"></div>
+                        <div class="pic" style="top:50px; left:280px; transform:rotate(-5deg);"><img src="img/lop2.jpg" onerror="this.src='https://placehold.co/100x110?text=Anh11'" alt="i"></div>
+                        <div class="pic" style="top:220px; left:150px; transform:rotate(2deg); z-index:10;"><img src="img/lop3.jpg" onerror="this.src='https://placehold.co/100x110?text=Anh12'" alt="i"></div>
+                        <div class="pic" style="top:350px; left:20px; transform:rotate(-15deg);"><img src="img/ao1.jpg" onerror="this.src='https://placehold.co/100x110?text=Anh13'" alt="i"></div>
+                        <div class="pic" style="top:360px; left:300px; transform:rotate(12deg);"><img src="img/ao2.jpg" onerror="this.src='https://placehold.co/100x110?text=Anh14'" alt="i"></div>
+                        <div class="pic" style="top:500px; left:140px; transform:rotate(-3deg);"><img src="img/ao3.jpg" onerror="this.src='https://placehold.co/100x110?text=Anh15'" alt="i"></div>
+                    </div>
+                    <div class="back">
+                        <div class="note-container">
+                            <h2 class="note-title">Trung Thu</h2>
+                            <p class="note-text">Làm đơn giản nhưng mà vẫn "nhất". Vui là chính!</p>
+                        </div>
                     </div>
                 </div>
-            </div>
 
-            <!-- TRANG 6: ẢNH GỘP & NOTE BÓNG ĐÁ -->
-            <div class="page">
-                <div class="front">
-                    <div class="pic" style="top:20px; left:40px; transform:rotate(-10deg);"><img src="img/201.jpg" onerror="this.src='https://placehold.co/100x110?text=VN1'" alt="img"></div>
-                    <div class="pic" style="top:40px; left:260px; transform:rotate(8deg);"><img src="img/202.jpg" onerror="this.src='https://placehold.co/100x110?text=VN2'" alt="img"></div>
-                    <div class="pic" style="top:200px; left:150px; transform:rotate(-3deg);"><img src="img/203.jpg" onerror="this.src='https://placehold.co/100x110?text=VN3'" alt="img"></div>
-                    <div class="pic" style="top:350px; left:20px; transform:rotate(12deg);"><img src="img/vn1.jpg" onerror="this.src='https://placehold.co/100x110?text=VN4'" alt="img"></div>
-                    <div class="pic" style="top:380px; left:280px; transform:rotate(-15deg);"><img src="img/204.jpg" onerror="this.src='https://placehold.co/100x110?text=VN5'" alt="img"></div>
-                    <div class="pic" style="top:520px; left:140px; transform:rotate(5deg);"><img src="img/vn3.jpg" onerror="this.src='https://placehold.co/100x110?text=VN6'" alt="img"></div>
-                </div>
-                <div class="back">
-                    <div class="note-container">
-                        <h2 class="note-title">Bóng Đá</h2>
-                        <p class="note-text">Đội cổ vũ còn sung hơn cả cầu thủ! Tinh thần là trên hết.</p>
+                <!-- TRANG 5: TRUNG THU BIG -->
+                <div class="page">
+                    <div class="front">
+                        <div class="pic big" style="top:40px; left:40px; transform:rotate(-12deg);"><img src="img/tthu1.jpg" onerror="this.src='https://placehold.co/200x160?text=TThu1'" alt="i"></div>
+                        <div class="pic big" style="top:250px; left:260px; transform:rotate(8deg);"><img src="img/tthu2.jpg" onerror="this.src='https://placehold.co/200x160?text=TThu2'" alt="i"></div>
+                        <div class="pic big" style="top:480px; left:60px; transform:rotate(-5deg);"><img src="img/tthu3.jpg" onerror="this.src='https://placehold.co/200x160?text=TThu3'" alt="i"></div>
+                    </div>
+                    <div class="back">
+                        <div class="note-container">
+                            <h2 class="note-title">Văn Nghệ</h2>
+                            <p class="note-text">Tập nhảy sai lên sai xuống, thế mà lúc lên sân khấu lại đều tăm tắp.</p>
+                        </div>
                     </div>
                 </div>
-            </div>
 
-            <!-- TRANG 7: ẢNH BÓNG ĐÁ TO & NOTE HUY CHƯƠNG -->
-            <div class="page">
-                <div class="front">
-                    <div class="pic big" style="top:40px; left:30px; transform:rotate(10deg);"><img src="img/dbanh1.jpg" onerror="this.src='https://placehold.co/200x160?text=BongDa1'" alt="img"></div>
-                    <div class="pic big" style="top:260px; left:250px; transform:rotate(-8deg);"><img src="img/dbanh2.jpg" onerror="this.src='https://placehold.co/200x160?text=BongDa2'" alt="img"></div>
-                    <div class="pic big" style="top:500px; left:50px; transform:rotate(5deg);"><img src="img/dbanh3.jpg" onerror="this.src='https://placehold.co/200x160?text=BongDa3'" alt="img"></div>
-                </div>
-                <div class="back">
-                    <div class="note-container">
-                        <h2 class="note-title">Huy Chương</h2>
-                        <p class="note-text">Thời gian mà cả lớp "sĩ" nhất. Đi đâu cũng khoe.</p>
+                <!-- TRANG 6: BÓNG ĐÁ -->
+                <div class="page">
+                    <div class="front">
+                        <div class="pic" style="top:20px; left:40px; transform:rotate(-10deg);"><img src="img/201.jpg" onerror="this.src='https://placehold.co/100x110?text=BD1'" alt="i"></div>
+                        <div class="pic" style="top:40px; left:260px; transform:rotate(8deg);"><img src="img/202.jpg" onerror="this.src='https://placehold.co/100x110?text=BD2'" alt="i"></div>
+                        <div class="pic" style="top:200px; left:150px; transform:rotate(-3deg);"><img src="img/203.jpg" onerror="this.src='https://placehold.co/100x110?text=BD3'" alt="i"></div>
+                        <div class="pic" style="top:350px; left:20px; transform:rotate(12deg);"><img src="img/vn1.jpg" onerror="this.src='https://placehold.co/100x110?text=BD4'" alt="i"></div>
+                        <div class="pic" style="top:380px; left:280px; transform:rotate(-15deg);"><img src="img/204.jpg" onerror="this.src='https://placehold.co/100x110?text=BD5'" alt="i"></div>
+                        <div class="pic" style="top:520px; left:140px; transform:rotate(5deg);"><img src="img/vn3.jpg" onerror="this.src='https://placehold.co/100x110?text=BD6'" alt="i"></div>
+                    </div>
+                    <div class="back">
+                        <div class="note-container">
+                            <h2 class="note-title">Bóng Đá</h2>
+                            <p class="note-text">Đội cổ vũ còn sung hơn cả cầu thủ! Tinh thần là trên hết.</p>
+                        </div>
                     </div>
                 </div>
-            </div>
 
-            <!-- TRANG 8: ẢNH HUY CHƯƠNG & NOTE ĐI CHƠI -->
-            <div class="page">
-                <div class="front">
-                    <div class="pic big" style="top:40px; left:30px; transform:rotate(-10deg);"><img src="img/hc1.jpg" onerror="this.src='https://placehold.co/200x160?text=HuyChuong1'" alt="img"></div>
-                    <div class="pic big" style="top:260px; left:250px; transform:rotate(5deg);"><img src="img/hc2.jpg" onerror="this.src='https://placehold.co/200x160?text=HuyChuong2'" alt="img"></div>
-                    <div class="pic big" style="top:480px; left:60px; transform:rotate(-5deg);"><img src="img/hc3.jpg" onerror="this.src='https://placehold.co/200x160?text=HuyChuong3'" alt="img"></div>
-                </div>
-                <div class="back">
-                    <div class="note-container">
-                        <h2 class="note-title">Đi Chơiiiiiiii</h2>
-                        <p class="note-text">Đi ai cũng nôn nao mà lên xe lại ngủ hết. Nhưng tới nơi thì quẩy banh nóc.</p>
+                <!-- TRANG 7: BÓNG ĐÁ BIG -->
+                <div class="page">
+                    <div class="front">
+                        <div class="pic big" style="top:40px; left:30px; transform:rotate(10deg);"><img src="img/dbanh1.jpg" onerror="this.src='https://placehold.co/200x160?text=BDBig1'" alt="i"></div>
+                        <div class="pic big" style="top:260px; left:250px; transform:rotate(-8deg);"><img src="img/dbanh2.jpg" onerror="this.src='https://placehold.co/200x160?text=BDBig2'" alt="i"></div>
+                        <div class="pic big" style="top:500px; left:50px; transform:rotate(5deg);"><img src="img/dbanh3.jpg" onerror="this.src='https://placehold.co/200x160?text=BDBig3'" alt="i"></div>
+                    </div>
+                    <div class="back">
+                        <div class="note-container">
+                            <h2 class="note-title">Huy Chương</h2>
+                            <p class="note-text">Thời gian mà cả lớp "sĩ" nhất. Đi đâu cũng khoe.</p>
+                        </div>
                     </div>
                 </div>
-            </div>
 
-            <!-- TRANG 9: ẢNH ĐI CHƠI & NOTE SINH NHẬT -->
-            <div class="page">
-                <div class="front">
-                    <div class="pic" style="top:20px; left:20px; transform:rotate(-15deg);"><img src="img/dc1.jpg" onerror="this.src='https://placehold.co/100x110?text=DiChoi1'" alt="img"></div>
-                    <div class="pic" style="top:10px; left:180px; transform:rotate(5deg);"><img src="img/dc2.jpg" onerror="this.src='https://placehold.co/100x110?text=DiChoi2'" alt="img"></div>
-                    <div class="pic" style="top:30px; left:330px; transform:rotate(-5deg);"><img src="img/dc3.jpg" onerror="this.src='https://placehold.co/100x110?text=DiChoi3'" alt="img"></div>
-                    <div class="pic" style="top:200px; left:40px; transform:rotate(10deg);"><img src="img/dc4.jpg" onerror="this.src='https://placehold.co/100x110?text=DiChoi4'" alt="img"></div>
-                    <div class="pic" style="top:220px; left:200px; transform:rotate(-8deg); z-index: 5;"><img src="img/dc5.jpg" onerror="this.src='https://placehold.co/100x110?text=DiChoi5'" alt="img"></div>
-                    <div class="pic" style="top:190px; left:340px; transform:rotate(12deg);"><img src="img/dc6.jpg" onerror="this.src='https://placehold.co/100x110?text=DiChoi6'" alt="img"></div>
-                    <div class="pic" style="top:400px; left:100px; transform:rotate(-5deg);"><img src="img/dc7.jpg" onerror="this.src='https://placehold.co/100x110?text=DiChoi7'" alt="img"></div>
-                </div>
-                <div class="back">
-                    <div class="note-container">
-                        <h2 class="note-title">Happy Birthday</h2>
-                        <p class="note-text">Tuy trễ hẹn với ngày chính thức 3 hôm, nhưng "độ nóng" thì không hề giảm. Yêu cô nhiều! ❤️</p>
+                <!-- TRANG 8: HUY CHƯƠNG -->
+                <div class="page">
+                    <div class="front">
+                        <div class="pic big" style="top:40px; left:30px; transform:rotate(-10deg);"><img src="img/hc1.jpg" onerror="this.src='https://placehold.co/200x160?text=HC1'" alt="i"></div>
+                        <div class="pic big" style="top:260px; left:250px; transform:rotate(5deg);"><img src="img/hc2.jpg" onerror="this.src='https://placehold.co/200x160?text=HC2'" alt="i"></div>
+                        <div class="pic big" style="top:480px; left:60px; transform:rotate(-5deg);"><img src="img/hc3.jpg" onerror="this.src='https://placehold.co/200x160?text=HC3'" alt="i"></div>
+                    </div>
+                    <div class="back">
+                        <div class="note-container">
+                            <h2 class="note-title">Đi Chơii</h2>
+                            <p class="note-text">Lên xe ngủ hết. Nhưng tới nơi thì quẩy banh nóc.</p>
+                        </div>
                     </div>
                 </div>
-            </div>
 
-            <!-- TRANG 10: SINH NHẬT & KẾT -->
-            <div class="page">
-                <div class="front">
-                    <h3 style="position:absolute; bottom:15px; right:20px; font-family:'Dancing Script'; font-size:1.5rem; color:#ff4081;">We Love You ❤️</h3>
-                    <div class="pic" style="top:30px; left:30px; transform:rotate(8deg);"><img src="img/snhat1.jpg" onerror="this.src='https://placehold.co/100x110?text=SN1'" alt="img"></div>
-                    <div class="pic" style="top:40px; left:290px; transform:rotate(-6deg);"><img src="img/snhat.jpg" onerror="this.src='https://placehold.co/100x110?text=SN2'" alt="img"></div>
-                    <div class="pic big" style="top:200px; left:140px; transform:rotate(2deg); z-index:10;"><img src="img/snhat 2.jpg" onerror="this.src='https://placehold.co/200x160?text=CoGiao'" alt="img"></div>
-                    <div class="pic" style="top:450px; left:50px; transform:rotate(-10deg);"><img src="img/snhat3.jpg" onerror="this.src='https://placehold.co/100x110?text=SN3'" alt="img"></div>
-                    <div class="pic" style="top:460px; left:300px; transform:rotate(12deg);"><img src="img/snhat4.jpg" onerror="this.src='https://placehold.co/100x110?text=SN4'" alt="img"></div>
+                <!-- TRANG 9: ĐI CHƠI -->
+                <div class="page">
+                    <div class="front">
+                        <div class="pic" style="top:20px; left:20px; transform:rotate(-15deg);"><img src="img/dc1.jpg" onerror="this.src='https://placehold.co/100x110?text=DC1'" alt="i"></div>
+                        <div class="pic" style="top:10px; left:180px; transform:rotate(5deg);"><img src="img/dc2.jpg" onerror="this.src='https://placehold.co/100x110?text=DC2'" alt="i"></div>
+                        <div class="pic" style="top:30px; left:330px; transform:rotate(-5deg);"><img src="img/dc3.jpg" onerror="this.src='https://placehold.co/100x110?text=DC3'" alt="i"></div>
+                        <div class="pic" style="top:200px; left:40px; transform:rotate(10deg);"><img src="img/dc4.jpg" onerror="this.src='https://placehold.co/100x110?text=DC4'" alt="i"></div>
+                        <div class="pic" style="top:220px; left:200px; transform:rotate(-8deg); z-index: 5;"><img src="img/dc5.jpg" onerror="this.src='https://placehold.co/100x110?text=DC5'" alt="i"></div>
+                        <div class="pic" style="top:190px; left:340px; transform:rotate(12deg);"><img src="img/dc6.jpg" onerror="this.src='https://placehold.co/100x110?text=DC6'" alt="i"></div>
+                        <div class="pic" style="top:400px; left:100px; transform:rotate(-5deg);"><img src="img/dc7.jpg" onerror="this.src='https://placehold.co/100x110?text=DC7'" alt="i"></div>
+                    </div>
+                    <div class="back">
+                        <div class="note-container">
+                            <h2 class="note-title">Happy Birthday</h2>
+                            <p class="note-text">Tuy trễ hẹn 3 hôm, nhưng "độ nóng" không hề giảm. Yêu cô nhiều! ❤️</p>
+                        </div>
+                    </div>
                 </div>
-                <div class="back cover">
-                    <h1 style="font-family:'Pacifico'; font-size:3.5rem;">The End</h1>
-                    <p style="padding:0 20px; font-size:1.1rem; margin-top:10px;">Dừng lại không phải kết thúc.<br>Nó mở ra một hành trình mới rực rỡ hơn!</p>
-                </div>
-            </div>
 
+                <!-- TRANG 10: SINH NHẬT -->
+                <div class="page">
+                    <div class="front">
+                        <h3 style="position:absolute; bottom:15px; right:20px; font-family:'Dancing Script'; font-size:1.5rem; color:#ff4081;">We Love You ❤️</h3>
+                        <div class="pic" style="top:30px; left:30px; transform:rotate(8deg);"><img src="img/snhat1.jpg" onerror="this.src='https://placehold.co/100x110?text=SN1'" alt="i"></div>
+                        <div class="pic" style="top:40px; left:290px; transform:rotate(-6deg);"><img src="img/snhat.jpg" onerror="this.src='https://placehold.co/100x110?text=SN2'" alt="i"></div>
+                        <div class="pic big" style="top:200px; left:140px; transform:rotate(2deg); z-index:10;"><img src="img/snhat 2.jpg" onerror="this.src='https://placehold.co/200x160?text=CoGiao'" alt="i"></div>
+                        <div class="pic" style="top:450px; left:50px; transform:rotate(-10deg);"><img src="img/snhat3.jpg" onerror="this.src='https://placehold.co/100x110?text=SN3'" alt="i"></div>
+                        <div class="pic" style="top:460px; left:300px; transform:rotate(12deg);"><img src="img/snhat4.jpg" onerror="this.src='https://placehold.co/100x110?text=SN4'" alt="i"></div>
+                    </div>
+                    <div class="back cover">
+                        <h1 style="font-family:'Pacifico'; font-size:3.5rem;">The End</h1>
+                        <p style="padding:0 20px; font-size:1.1rem; margin-top:10px;">Dừng lại không phải kết thúc.<br>Nó mở ra một hành trình mới!</p>
+                    </div>
+                </div>
+
+            </div>
         </div>
     </div>
 
 <script>
-    /* --- XỬ LÝ NHẠC --- */
+    // --- JS KIỂM TRA XOAY MÀN HÌNH (MẠNH HƠN CSS) ---
+    function checkOrientation() {
+        const warning = document.getElementById('rotate-warning');
+        const body = document.body;
+        
+        // Nếu chiều cao lớn hơn chiều rộng -> Đang để dọc (Portrait)
+        if (window.innerHeight > window.innerWidth) {
+            body.classList.add('portrait-mode');
+        } else {
+            // Đang để ngang (Landscape) -> Hiện sách, ẩn cảnh báo
+            body.classList.remove('portrait-mode');
+            resizeBook(); // Tính toán lại kích thước sách
+        }
+    }
+
+    // --- JS TỰ ĐỘNG THU PHÓNG SÁCH ---
+    function resizeBook() {
+        if (document.body.classList.contains('portrait-mode')) return; // Đang dọc thì không cần tính
+
+        const bookW = 500; 
+        const bookH = 700;
+        const windowW = window.innerWidth;
+        const windowH = window.innerHeight;
+        const padding = 20;
+
+        // Tính tỷ lệ thu nhỏ để vừa màn hình
+        let scale = Math.min(
+            (windowW - padding) / bookW, 
+            (windowH - padding) / bookH
+        );
+        if (scale > 1) scale = 1; // Không phóng to quá mức
+
+        const content = document.getElementById('mainContent');
+        content.style.transform = `translate(-50%, -50%) scale(${scale})`;
+    }
+
+    // Lắng nghe sự kiện xoay hoặc thay đổi kích thước
+    window.addEventListener('load', () => { checkOrientation(); });
+    window.addEventListener('resize', () => { checkOrientation(); });
+    
+    // --- XỬ LÝ NHẠC ---
     const music = document.getElementById('bg-music');
     const musicBtn = document.getElementById('musicBtn');
     let isPlaying = false;
@@ -354,43 +370,31 @@
         isPlaying = !isPlaying;
     }
 
-    // Tự động phát nhạc khi chạm lần đầu
     document.body.addEventListener('click', () => {
         if (!isPlaying) {
             music.play().then(() => {
                 isPlaying = true;
                 musicBtn.classList.add('playing');
-            }).catch(e => {});
+            }).catch(() => {});
         }
     }, { once: true });
 
-    /* --- XỬ LÝ LẬT 10 TRANG --- */
+    // --- XỬ LÝ LẬT TRANG ---
     const book = document.querySelector("#book");
     const pages = document.querySelectorAll(".page");
     const totalPages = pages.length;
 
-    // Sắp xếp thứ tự Z-index
     pages.forEach((page, index) => {
         page.style.zIndex = totalPages - index;
-    });
-
-    pages.forEach((page, index) => {
         page.addEventListener("click", function() {
             if (!this.classList.contains("flipped")) {
-                // MỞ
                 this.classList.add("flipped");
                 this.style.zIndex = index + 1;
-                
-                // Dịch sách để cân đối
                 if (index === 0) book.style.transform = "translateX(50%)";
                 if (index === totalPages - 1) book.style.transform = "translateX(100%)";
             } else {
-                // ĐÓNG
                 this.classList.remove("flipped");
-                setTimeout(() => {
-                    this.style.zIndex = totalPages - index;
-                }, 300);
-
+                setTimeout(() => { this.style.zIndex = totalPages - index; }, 300);
                 if (index === 0) book.style.transform = "translateX(0%)";
                 if (index === totalPages - 1) book.style.transform = "translateX(50%)";
             }
